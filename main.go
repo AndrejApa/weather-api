@@ -15,8 +15,8 @@ const (
 )
 
 type Item struct {
-	City  string  `json:"city"`
-	Tempa float64 `json:"temp"`
+	City string  `json:"city"`
+	Temp float64 `json:"temp"`
 }
 
 type WeatherResponse struct {
@@ -53,7 +53,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	item := Item{Tempa: 18, City: city}
+	item := Item{Temp: 18, City: city}
 	jitem, err := json.Marshal(item)
 	if err != nil {
 		fmt.Println(err.Error())
