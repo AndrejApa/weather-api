@@ -29,7 +29,7 @@ func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
 		city := r.URL.Query().Get("city")
 		fmt.Println("city: ", city)
-		// перепроверить
+		// перепроверить вызов
 		m, _ := getWeatherByCity(city)
 		_, err := json.Marshal(m)
 		if err != nil {
