@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -14,25 +13,40 @@ const (
 	units      = "metric"
 )
 
-type Item struct {
+type WeatherResponse struct {
+	Name string `json:"name"`
+	Main struct {
+		Temp float64 `json:"temp"`
+	} `json:"main"`
+}
+
+type CityResp struct {
 	City string  `json:"city"`
 	Temp float64 `json:"temp"`
 }
 
-type WeatherResponse struct {
-	Main struct {
-		Temp float64 `json:"temp"`
-	}
+func main() {
+	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
+		city := r.URL.Query().Get("city")
+		fmt.Println("city: ", city)
+		// перепроверить
+		m, _ := getWeatherByCity(city)
+		_, err := json.Marshal(m)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+	})
+	fmt.Println("Server is listening...")
+	_ = http.ListenAndServe("127.0.0.1:8080", nil)
+
 }
 
-func main() {
-	var a string
-	fmt.Print("Enter city: ")
-	_, _ = fmt.Scan(&a)
-	city := a
+func getWeatherByCity(city string) (WeatherResponse, error) {
 	req, err := http.NewRequest("GET", weatherAPI, nil)
 	if err != nil {
-		log.Fatal(err)
+		return WeatherResponse{}, err
 	}
 	values := url.Values{}
 	values.Add("appid", apiToken)
@@ -44,28 +58,14 @@ func main() {
 
 	resp, err := cli.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return WeatherResponse{}, err
 	}
 
 	var Weather WeatherResponse
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&Weather)
 	if err != nil {
-		log.Fatal(err)
+		return WeatherResponse{}, err
 	}
-	item := Item{Temp: 18, City: city}
-	jitem, err := json.Marshal(item)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	//fmt.Println(string(jitem))
-
-	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprintf(w, "%s\n", jitem)
-
-	})
-	fmt.Println("Server is listening...")
-	_ = http.ListenAndServe("127.0.0.1:8080", nil)
-
+	return Weather, nil
 }
