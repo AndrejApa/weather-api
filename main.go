@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -20,25 +19,18 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-type CityResp struct {
-	City string  `json:"city"`
-	Temp float64 `json:"temp"`
-}
-
 func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
 		city := r.URL.Query().Get("city")
-		fmt.Println("city: ", city)
-		// перепроверить вызов
-		m, _ := getWeatherByCity(city)
-		_, err := json.Marshal(m)
+		data, err := getWeatherByCity(city)
 		if err != nil {
-			fmt.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(data)
 
 	})
-	fmt.Println("Server is listening...")
 	_ = http.ListenAndServe("127.0.0.1:8080", nil)
 
 }
