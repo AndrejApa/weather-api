@@ -4,15 +4,19 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
 const (
 	weatherAPI = "http://api.openweathermap.org/data/2.5/weather"
-	apiToken   = "2ae6e50490e35649304462a5d8f6cb29"
 	units      = "metric"
 )
+
+type apiConfig struct {
+	ApiToken string `json:"ApiToken"`
+}
 
 type WeatherResponse struct {
 	Name string `json:"name"`
@@ -21,11 +25,19 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-/*type CityResp struct {
-	Name string `json:"name"`
-	Temp float64 `json:"temp"`
-}*/
+func load(filename string) (apiConfig, error) {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return apiConfig{}, err
+	}
+	var c apiConfig
+	err = json.Unmarshal(bytes, &c)
+	if err != nil {
+		return apiConfig{}, err
+	}
+	return c, nil
 
+}
 func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
 		city := r.URL.Query().Get("q")
@@ -51,8 +63,12 @@ func getWeatherByCity(city string) (WeatherResponse, error) {
 	if err != nil {
 		return WeatherResponse{}, err
 	}
+	apiConfig, err := load(".apiConfig")
+	if err != nil {
+		return WeatherResponse{}, err
+	}
 	values := url.Values{}
-	values.Add("appid", apiToken)
+	values.Add("appid", apiConfig.ApiToken)
 	values.Add("units", units)
 	values.Add("q", city)
 	req.URL.RawQuery = values.Encode()
