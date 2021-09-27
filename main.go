@@ -63,12 +63,12 @@ func getWeatherByCity(city string) (WeatherResponse, error) {
 	if err != nil {
 		return WeatherResponse{}, err
 	}
-	apiConfig, err := load(".apiConfig")
+	token, err := load(".apiConfig")
 	if err != nil {
 		return WeatherResponse{}, err
 	}
 	values := url.Values{}
-	values.Add("appid", apiConfig.ApiToken)
+	values.Add("appid", token.ApiToken)
 	values.Add("units", units)
 	values.Add("q", city)
 	req.URL.RawQuery = values.Encode()
