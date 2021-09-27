@@ -21,6 +21,11 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
+/*type CityResp struct {
+	Name string `json:"name"`
+	Temp float64 `json:"temp"`
+}*/
+
 func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
 		city := r.URL.Query().Get("q")
@@ -29,13 +34,18 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(data)
+		err = json.NewEncoder(w).Encode(data)
+		if err != nil {
+			return
+		}
 
 	})
-	_ = http.ListenAndServe("127.0.0.1:8080", nil)
+	err := http.ListenAndServe("127.0.0.1:8080", nil)
+	if err != nil {
+		return
+	}
 
 }
-
 func getWeatherByCity(city string) (WeatherResponse, error) {
 	req, err := http.NewRequest("GET", weatherAPI, nil)
 	if err != nil {
