@@ -4,19 +4,18 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 const (
 	weatherAPI = "http://api.openweathermap.org/data/2.5/weather"
 	units      = "metric"
 )
-
-type apiConfig struct {
-	ApiToken string `json:"ApiToken"`
-}
 
 type WeatherResponse struct {
 	Name string `json:"name"`
@@ -25,19 +24,6 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-func load(filename string) (apiConfig, error) {
-	bytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return apiConfig{}, err
-	}
-	var c apiConfig
-	err = json.Unmarshal(bytes, &c)
-	if err != nil {
-		return apiConfig{}, err
-	}
-	return c, nil
-
-}
 func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
 		city := r.URL.Query().Get("q")
@@ -58,17 +44,23 @@ func main() {
 	}
 
 }
+func init() {
+
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
+}
 func getWeatherByCity(city string) (WeatherResponse, error) {
 	req, err := http.NewRequest("GET", weatherAPI, nil)
 	if err != nil {
 		return WeatherResponse{}, err
 	}
-	token, err := load(".apiConfig")
-	if err != nil {
-		return WeatherResponse{}, err
+	APIKey, exists := os.LookupEnv("API_KEY")
+	if !exists {
+		fmt.Println("Error,see env file")
 	}
 	values := url.Values{}
-	values.Add("appid", token.ApiToken)
+	values.Add("appid", APIKey)
 	values.Add("units", units)
 	values.Add("q", city)
 	req.URL.RawQuery = values.Encode()
