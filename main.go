@@ -1,4 +1,4 @@
-// http://127.0.0.1:8080/api/weather?q='your city'
+// http://127.0.0.1:8080/api/weather?city='your city'
 
 package main
 
