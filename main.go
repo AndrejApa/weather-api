@@ -26,7 +26,7 @@ type WeatherResponse struct {
 
 func main() {
 	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
-		city := r.URL.Query().Get("q")
+		city := r.URL.Query().Get("city")
 		data, err := getWeatherByCity(city)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
