@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -39,7 +40,7 @@ func main() {
 	})
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
-		log.Println("Error starting server")
+		log.Fatal("Error starting server", err)
 	}
 }
 
@@ -54,7 +55,12 @@ func getWeatherByCity(city string) (WeatherResponse, error) {
 	if err != nil {
 		return WeatherResponse{}, err
 	}
-	APIKey := os.Getenv("API_KEY")
+	APIKey, ok := os.LookupEnv("API_KEY")
+	if !ok {
+		fmt.Println("API_KEY is not present")
+	} else {
+		fmt.Printf("API_KEY: %t\n", ok)
+	}
 	values := url.Values{}
 	values.Add("appid", APIKey)
 	values.Add("units", units)
