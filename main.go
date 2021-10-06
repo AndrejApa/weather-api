@@ -24,28 +24,28 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-func main() {
-	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
-		city := r.URL.Query().Get("city")
-		data, err := getWeatherByCity(city)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = json.NewEncoder(w).Encode(data)
-		if err != nil {
-			return
-		}
-
-	})
+func weather(w http.ResponseWriter, r *http.Request) {
+	city := r.URL.Query().Get("city")
+	data, err := getWeatherByCity(city)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(data)
+	if err != nil {
+		return
+	}
+}
+func handleRequest() {
+	http.HandleFunc("/api/weather", weather)
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
 		log.Fatal("Error starting server", err)
 	}
 }
+func main() { handleRequest() }
 
 func init() {
-
 	if err := godotenv.Load(); err != nil {
 		log.Print("No .env file found")
 	}
