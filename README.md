@@ -1,2 +1,3 @@
-# My first weather-api
-Switch to dev branch to see the code
+# weather-api
+
+http://127.0.0.1:8080/api/weather?city= city name
