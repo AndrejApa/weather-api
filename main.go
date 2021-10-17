@@ -17,6 +17,11 @@ const (
 	units      = "metric"
 )
 
+type MyResponse struct {
+	City string  `json:"city"`
+	Temp float64 `json:"temp"`
+}
+
 type WeatherResponse struct {
 	Name string `json:"name"`
 	Main struct {
@@ -24,28 +29,35 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-func weather(w http.ResponseWriter, r *http.Request) {
-	city := r.URL.Query().Get("city")
-	data, err := getWeatherByCity(city)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(data)
-	if err != nil {
-		return
-	}
-}
-func handleRequest() {
-	http.HandleFunc("/api/weather", weather)
+func main() {
+	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
+		city := r.URL.Query().Get("city")
+		data, err := getWeatherByCity(city)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		resp := MyResponse{
+			City: data.Name,
+			Temp: data.Main.Temp,
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			return
+		}
+
+	})
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
 		log.Fatal("Error starting server", err)
 	}
 }
-func main() { handleRequest() }
 
 func init() {
+
 	if err := godotenv.Load(); err != nil {
 		log.Print("No .env file found")
 	}
