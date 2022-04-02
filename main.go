@@ -29,31 +29,34 @@ type WeatherResponse struct {
 	} `json:"main"`
 }
 
-func main() {
-	http.HandleFunc("/api/weather", func(w http.ResponseWriter, r *http.Request) {
-		city := r.URL.Query().Get("city")
-		data, err := getWeatherByCity(city)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+func weather(w http.ResponseWriter, r *http.Request) {
+	city := r.URL.Query().Get("city")
+	data, err := getWeatherByCity(city)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	resp := MyResponse{
+		City: data.Name,
+		Temp: data.Main.Temp,
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
 
-		resp := MyResponse{
-			City: data.Name,
-			Temp: data.Main.Temp,
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		err = json.NewEncoder(w).Encode(resp)
-		if err != nil {
-			return
-		}
-
-	})
+}
+func handleRequest() {
+	http.HandleFunc("/api/weather", weather)
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
 		log.Fatal("Error starting server", err)
 	}
+}
+
+func main() {
+	handleRequest()
 }
 
 func init() {
@@ -61,7 +64,36 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Print("No .env file found")
 	}
+	/*
+		l:= logrus.New()
+		l.SetReportCaller(true)
+		l.Formatter = &logrus.TextFormatter{
+			CallerPrettyfier: func(frame *runtime.Frame) (function string, file string) {
+				filename := path.Base(frame.File)
+				return fmt.Sprintf("%s()",frame.Function),fmt.Sprintf("%s:%d",filename,frame.Line)
+			},
+			DisableColors: false,
+			FullTimestamp: true,
+		}
+		err := os.MkdirAll("logs",0664)
+		if err != nil {
+			panic(err)
+		}
+		allfile,err :=os.OpenFile("logs/all.log",os.O_CREATE|os.O_WRONLY|os.O_APPEND,0640)
+		if err != nil{
+			panic(err)
+		}
+		l.SetOutput(io.Discard)
+		l.AddHook(&writerHook{
+			Writer: []io.Writer{allfile,os.Stdout},
+			Loglevels: logrus.AllLevels,
+
+		})
+		l.SetLevel(logrus.TraceLevel)
+
+	*/
 }
+
 func getWeatherByCity(city string) (WeatherResponse, error) {
 	req, err := http.NewRequest("GET", weatherAPI, nil)
 	if err != nil {
@@ -94,3 +126,40 @@ func getWeatherByCity(city string) (WeatherResponse, error) {
 	}
 	return weather, nil
 }
+
+/*type writerHook struct {
+	Writer []io.Writer
+	Loglevels []logrus.Level
+
+}
+func (hook *writerHook) Fire(entry *logrus.Entry) error{
+	line , err := entry.String()
+	if err != nil{
+		return err
+	}
+	for _, v := range hook.Writer{
+		v.Write([]byte(line))
+	}
+	return err
+}
+
+func (hook *writerHook) Levels() []logrus.Level{
+	return hook.Loglevels
+}
+
+var e *logrus.Entry
+
+type Logger struct {
+	*logrus.Entry
+}
+
+func GetLogger() Logger {
+	return Logger{e}
+}
+
+func (l *Logger) GetLoggerWithField(k string,v interface{}) Logger {
+	return Logger{l.WithField(k,v)}
+
+}
+
+*/
